@@ -1,29 +1,276 @@
-apiVersion: apps/v1
-kind: # {insert kind here}
-metadata:
-  labels:
-    run: djangoserver
-  name: djangoserver
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      run: djangoserver
-  strategy:
-    rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 25%
-    type: RollingUpdate
-  template:
-    metadata:
-      labels:
-        run: djangoserver
-    spec:
-      containers:
-      - image: # {insert image here}
-        imagePullPolicy: Always
-        name: djangoserver
-        ports:
-        - containerPort: # {insert port here}
-          protocol: TCP
-      restartPolicy: Always
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "items": [
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "name": "capstone-mongo"
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "app": "capstone-mongo"
+          }
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "app": "capstone-mongo"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "name": "capstone-mongo",
+                "image": "mongo:7",
+                "ports": [
+                  {
+                    "containerPort": 27017
+                  }
+                ],
+                "env": [],
+                "resources": {
+                  "requests": {
+                    "cpu": "100m",
+                    "memory": "128Mi"
+                  },
+                  "limits": {
+                    "cpu": "500m",
+                    "memory": "512Mi"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "name": "capstone-mongo"
+      },
+      "spec": {
+        "selector": {
+          "app": "capstone-mongo"
+        },
+        "ports": [
+          {
+            "port": 27017,
+            "targetPort": 27017
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "name": "capstone-songs"
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "app": "capstone-songs"
+          }
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "app": "capstone-songs"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "name": "capstone-songs",
+                "image": "us.icr.io/sn-labs-donnagreeng4/songs:1",
+                "ports": [
+                  {
+                    "containerPort": 8080
+                  }
+                ],
+                "env": [
+                  {
+                    "name": "MONGODB_SERVICE",
+                    "value": "capstone-mongo"
+                  }
+                ],
+                "resources": {
+                  "requests": {
+                    "cpu": "100m",
+                    "memory": "128Mi"
+                  },
+                  "limits": {
+                    "cpu": "500m",
+                    "memory": "512Mi"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "name": "capstone-songs"
+      },
+      "spec": {
+        "selector": {
+          "app": "capstone-songs"
+        },
+        "ports": [
+          {
+            "port": 8080,
+            "targetPort": 8080
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "name": "capstone-pictures"
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "app": "capstone-pictures"
+          }
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "app": "capstone-pictures"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "name": "capstone-pictures",
+                "image": "us.icr.io/sn-labs-donnagreeng4/pictures:1",
+                "ports": [
+                  {
+                    "containerPort": 3000
+                  }
+                ],
+                "env": [],
+                "resources": {
+                  "requests": {
+                    "cpu": "100m",
+                    "memory": "128Mi"
+                  },
+                  "limits": {
+                    "cpu": "500m",
+                    "memory": "512Mi"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "name": "capstone-pictures"
+      },
+      "spec": {
+        "selector": {
+          "app": "capstone-pictures"
+        },
+        "ports": [
+          {
+            "port": 3000,
+            "targetPort": 3000
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "name": "djangoserver"
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "app": "djangoserver"
+          }
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "app": "djangoserver"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "name": "djangoserver",
+                "image": "us.icr.io/sn-labs-donnagreeng4/djangoserver:1",
+                "ports": [
+                  {
+                    "containerPort": 8000
+                  }
+                ],
+                "env": [
+                  {
+                    "name": "SONGS_SERVICE_URL",
+                    "value": "http://capstone-songs:8080"
+                  },
+                  {
+                    "name": "PICTURES_SERVICE_URL",
+                    "value": "http://capstone-pictures:3000"
+                  }
+                ],
+                "resources": {
+                  "requests": {
+                    "cpu": "100m",
+                    "memory": "128Mi"
+                  },
+                  "limits": {
+                    "cpu": "500m",
+                    "memory": "512Mi"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "name": "djangoserver"
+      },
+      "spec": {
+        "selector": {
+          "app": "djangoserver"
+        },
+        "ports": [
+          {
+            "port": 8000,
+            "targetPort": 8000
+          }
+        ]
+      }
+    }
+  ]
+}
